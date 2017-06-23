@@ -12,48 +12,172 @@ export function activate(context: vscode.ExtensionContext) {
     // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "sourcetrail" is now active!');
 
+    let sourcetrail = new Sourcetrail();
+
     // The command has been defined in the package.json file
     // Now provide the implementation of the command with  registerCommand
     // The commandId parameter must match the command field in package.json
-    let disposable = vscode.commands.registerCommand('extension.sayHello', () => {
-        // The code you place here will be executed every time your command is executed
-
-        // Display a message box to the user
-        vscode.window.showInformationMessage('Hello World!');
-        var editor = vscode.window.activeTextEditor;
+    let start = vscode.commands.registerCommand('extension.startServer', () => {
+        sourcetrail.restartServer();
+    });
+    let stop = vscode.commands.registerCommand('extension.stopServer', () => {
+        sourcetrail.stopServer();
     });
 
-    vscode.commands.registerCommand('sendTestmessage', sendMessage);
-
-    context.subscriptions.push(disposable);
-}
-
-function startTCPServer(addr: number)
-{
-    var server = net.createServer(function (socket) {
-        // Handle incoming messages from clients.
-        socket.on('data', function (data) {
-            vscode.window.showInformationMessage(data.toString());
-        });
-
+    let sendLoc = vscode.commands.registerCommand('extension.sendLocation', () => {
+        sourcetrail.sendLocation();
+    });
+    let sendP = vscode.commands.registerCommand('extension.sendPing', () => {
+        sourcetrail.sendPing();
     });
 
-    server.listen(6666, 'localhost');
-
+    context.subscriptions.push(start);
+    context.subscriptions.push(stop);
+    context.subscriptions.push(sendLoc);
+    context.subscriptions.push(sendP);
+    context.subscriptions.push(sourcetrail);
 }
 
-function sendMessage(message: string)
-{
-    var connection = net.createConnection(6666, 'localhost');
+class Sourcetrail {
+    private _server: net.Server;
+    private _statusBarItem : vscode.StatusBarItem;
 
-    connection.on('error', function(connect) {
-        vscode.window.showErrorMessage('cant send message');
-    })
-
-    connection.on('connect', function(connect) {
-        connection.write("test");
-    })
+    constructor() {
+        this._statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
+        if (vscode.workspace.getConfiguration("sourcetrail").get("startServerAtStartup"))
+        {
+            this.restartServer();
+        }
+    }
     
+    disconnectedStatus()
+    {
+        this._statusBarItem.text = "$(circle-slash) Sourcetrail";
+        this._statusBarItem.show();
+    }
+
+    connectedStatus()
+    {
+        this._statusBarItem.text = "$(check) Sourcetrail";
+        this._statusBarItem.show();
+    }
+
+    public restartServer()
+    {
+        let me = this;
+        // Create StatusBarItem if needed
+        if (!this._statusBarItem) {
+            this.disconnectedStatus();
+        }
+
+        if (this._server)
+        {
+            this.stopServer();
+            this._statusBarItem.hide();
+        }
+
+        this._server = net.createServer(function (socket) {
+            // Handle incoming messages from clients.
+            socket.on('data', function (data) {
+                me.processMessage(data.toString());
+            });
+            socket.on('error', function(data)
+            {
+                vscode.window.showErrorMessage('Sourcetrail - Error recieving data');
+                me.disconnectedStatus();
+                console.log('server recieve data error');
+            });
+
+        });
+        const ip: string = vscode.workspace.getConfiguration("sourcetrail").get<string>("ip");
+        const port: number = vscode.workspace.getConfiguration("sourcetrail").get<number>("pluginPort");
+        this._server.listen(port, ip);
+        this.sendPing();
+    }
+
+    public stopServer()
+    {
+        this._server.close();
+        this._server = null;
+    }
+
+    sendPing()
+    {
+        this.sendMessage("ping>>VS Code<EOM>");
+    }
+
+    sendLocation()
+    {
+        const editor = vscode.window.activeTextEditor;
+
+        if (editor)
+        {
+            var message = "setActiveToken>>"
+            + editor.document.uri.fsPath
+            + ">>" + (editor.selection.active.line + 1).toString()
+            + ">>" + (editor.selection.active.character + 1).toString()
+            + "<EOM>";
+            console.log(message);
+            this.sendMessage(message);
+        }
+        else
+        {
+            console.log("No editor");
+            vscode.window.showWarningMessage('Sourcetrail - No editor window with cursor open');
+        }
+    }
+
+    sendMessage(message: string)
+    {
+        let me = this;
+        const ip: string = vscode.workspace.getConfiguration("sourcetrail").get<string>("ip");
+        const port: number = vscode.workspace.getConfiguration("sourcetrail").get<number>("sourcetrailPort");
+        var connection = net.createConnection(port, ip);
+
+        connection.on('error', function(connect) {
+            console.log('send-error');
+            vscode.window.showErrorMessage('Sourcetrail - Cant send message: is Sourcetrail running?');
+            me.disconnectedStatus();
+        })
+
+        connection.on('connect', function(connect) {
+            console.log('send-connect');
+            console.log(message);
+            connection.write(message);
+            connection.end();
+        })
+
+    }
+
+    processMessage(message: String)
+    {
+        console.log("process message: " + message);
+        var m = message.split(">>");
+        if (m[0] == "ping")
+        {
+            this.connectedStatus();
+            this.sendPing();
+        }
+        else if (m[0] == "moveCursor")
+        {
+            this.connectedStatus();
+            var file = vscode.Uri.file(m[1]);
+            vscode.commands.executeCommand('vscode.open', file);
+            const editor = vscode.window.activeTextEditor;
+            if (editor)
+            {
+                const pos = editor.selection.active;
+                var newPos = pos.with(parseInt(m[2])-1, parseInt(m[3])-1);
+                editor.selections = [new vscode.Selection(newPos, newPos)];
+            }
+        }
+    }
+
+    dispose()
+    {
+        this.stopServer();
+        this._statusBarItem.dispose();
+    }
 }
 
 // this method is called when your extension is deactivated

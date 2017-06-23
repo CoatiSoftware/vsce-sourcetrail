@@ -1,5 +1,6 @@
 {
     "name": "sourcetrail",
+    "icon": "icon.png",
     "displayName": "sourcetrail",
     "description": "VSCode Extension to communicate with Sourcetrail",
     "version": "0.0.1",
@@ -11,14 +12,86 @@
         "Other"
     ],
     "activationEvents": [
-        "onCommand:extension.sayHello"
+        "*"
     ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/CoatiSoftware/vsce-sourcetrail.git"
+    },
+    "homepage": "https://github.com/CoatiSoftware/vsce-sourcetrail/blob/master/README.md",
+    "bugs": {
+        "email": "astallinger@coati.io",
+        "url": "https://github.com/CoatiSoftware/vsce-sourcetrail/issues"
+    },
+    "license": "LICENSE.txt",
     "main": "./out/src/extension",
     "contributes": {
-        "commands": [{
-            "command": "extension.sayHello",
-            "title": "Hello World"
-        }]
+        "commands": [
+            {
+                "command": "extension.startServer",
+                "title": "Sourcetrail: (Re)start server"
+            },
+            {
+                "command": "extension.stopServer",
+                "title": "Sourcetrail: Stop Server"
+            },
+            {
+                "command": "extension.sendLocation",
+                "title": "Sourcetrail: Send Location"
+            },
+            {
+                "command": "extension.sendPing",
+                "title": "Sourcetrail: Send Ping"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Sourcetrail Configurations",
+            "properties": {
+                "sourcetrail.sourcetrailPort": {
+                    "type": "integer",
+                    "default": 6667,
+                    "description": "Port Sourcetrail listen to"
+                },
+                "sourcetrail.pluginPort": {
+                    "type": "integer",
+                    "default": 6666,
+                    "description": "Port VS Code listen to"
+                },
+                "sourcetrail.ip": {
+                    "type": "string",
+                    "default": "localhost",
+                    "description": ""
+                },
+                "sourcetrail.startServerAtStartup": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Start the TCP Server for listening at the Startup of VS Code"
+                }
+            }
+        },
+        "menus": {
+            "editor/context": [
+                {
+                    "command": "extension.sendLocation",
+                    "group": "sourcetrailgroup@1"
+                }
+            ]
+        },
+        "keybindings": [
+            {
+                "command": "extension.sendLocation",
+                "key": ""
+            },
+            {
+                "command": "extension.stopServer",
+                "key": ""
+            },
+            {
+                "command": "extension.startServer",
+                "key": ""
+            }
+        ]
     },
     "scripts": {
         "vscode:prepublish": "tsc -p ./",
