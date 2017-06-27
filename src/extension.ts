@@ -40,38 +40,33 @@ export function activate(context: vscode.ExtensionContext) {
 
 class Sourcetrail {
     private _server: net.Server;
-    private _statusBarItem : vscode.StatusBarItem;
+    private _statusBarItem: vscode.StatusBarItem;
 
     constructor() {
         this._statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right);
-        if (vscode.workspace.getConfiguration("sourcetrail").get("startServerAtStartup"))
-        {
+        if (vscode.workspace.getConfiguration("sourcetrail").get("startServerAtStartup")) {
             this.restartServer();
         }
     }
-    
-    disconnectedStatus()
-    {
+
+    disconnectedStatus() {
         this._statusBarItem.text = "$(circle-slash) Sourcetrail";
         this._statusBarItem.show();
     }
 
-    connectedStatus()
-    {
+    connectedStatus() {
         this._statusBarItem.text = "$(check) Sourcetrail";
         this._statusBarItem.show();
     }
 
-    public restartServer()
-    {
+    public restartServer() {
         let me = this;
         // Create StatusBarItem if needed
         if (!this._statusBarItem) {
             this.disconnectedStatus();
         }
 
-        if (this._server)
-        {
+        if (this._server) {
             this.stopServer();
             this._statusBarItem.hide();
         }
@@ -81,8 +76,7 @@ class Sourcetrail {
             socket.on('data', function (data) {
                 me.processMessage(data.toString());
             });
-            socket.on('error', function(data)
-            {
+            socket.on('error', function (data) {
                 vscode.window.showErrorMessage('Sourcetrail - Error recieving data');
                 me.disconnectedStatus();
                 console.log('server recieve data error');
@@ -95,52 +89,46 @@ class Sourcetrail {
         this.sendPing();
     }
 
-    public stopServer()
-    {
+    public stopServer() {
         this._server.close();
         this._server = null;
     }
 
-    sendPing()
-    {
+    sendPing() {
         this.sendMessage("ping>>VS Code<EOM>");
     }
 
-    sendLocation()
-    {
+    sendLocation() {
         const editor = vscode.window.activeTextEditor;
 
-        if (editor)
-        {
+        if (editor) {
             var message = "setActiveToken>>"
-            + editor.document.uri.fsPath
-            + ">>" + (editor.selection.active.line + 1).toString()
-            + ">>" + (editor.selection.active.character + 1).toString()
-            + "<EOM>";
+                + editor.document.uri.fsPath
+                + ">>" + (editor.selection.active.line + 1).toString()
+                + ">>" + (editor.selection.active.character + 1).toString()
+                + "<EOM>";
             console.log(message);
             this.sendMessage(message);
         }
-        else
-        {
+        else {
             console.log("No editor");
             vscode.window.showWarningMessage('Sourcetrail - No editor window with cursor open');
         }
     }
 
-    sendMessage(message: string)
-    {
+    sendMessage(message: string) {
         let me = this;
         const ip: string = vscode.workspace.getConfiguration("sourcetrail").get<string>("ip");
         const port: number = vscode.workspace.getConfiguration("sourcetrail").get<number>("sourcetrailPort");
         var connection = net.createConnection(port, ip);
 
-        connection.on('error', function(connect) {
+        connection.on('error', function (connect) {
             console.log('send-error');
             vscode.window.showErrorMessage('Sourcetrail - Cant send message: is Sourcetrail running?');
             me.disconnectedStatus();
         })
 
-        connection.on('connect', function(connect) {
+        connection.on('connect', function (connect) {
             console.log('send-connect');
             console.log(message);
             connection.write(message);
@@ -149,32 +137,31 @@ class Sourcetrail {
 
     }
 
-    processMessage(message: String)
-    {
+    processMessage(message: String) {
         console.log("process message: " + message);
         var m = message.split(">>");
-        if (m[0] == "ping")
-        {
+        if (m[0] == "ping") {
             this.connectedStatus();
             this.sendPing();
         }
-        else if (m[0] == "moveCursor")
-        {
+        else if (m[0] == "moveCursor") {
             this.connectedStatus();
             var file = vscode.Uri.file(m[1]);
-            vscode.commands.executeCommand('vscode.open', file);
-            const editor = vscode.window.activeTextEditor;
-            if (editor)
-            {
-                const pos = editor.selection.active;
-                var newPos = pos.with(parseInt(m[2])-1, parseInt(m[3])-1);
-                editor.selections = [new vscode.Selection(newPos, newPos)];
-            }
+            vscode.commands.executeCommand('vscode.open', file)
+                .then(function () {
+                    const editor = vscode.window.activeTextEditor;
+                    if (editor) {
+                        const pos = editor.selection.active;
+                        var newPos = pos.with(parseInt(m[2]) - 1, parseInt(m[3]) - 1);
+                        editor.selections = [new vscode.Selection(newPos, newPos)];
+                        vscode.commands.executeCommand('revealLine', { 'lineNumber': parseInt(m[2]) - 1, 'at': 'center' });
+                    }
+                })
+
         }
     }
 
-    dispose()
-    {
+    dispose() {
         this.stopServer();
         this._statusBarItem.dispose();
     }
