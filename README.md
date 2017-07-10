@@ -1,10 +1,13 @@
 
-# sourcetrail extenstion
+# Sourcetrail Extenstion for VS Code
 
 This extension enables VS Code to communicate with [Sourcetrail](http://sourcetrail.com)
 
-The source code of this extension is available on [Github repo](http://github.com/CoatiSoftware/vsce-sourcetrail.git), feel
-free to send a pull request or issue a bug.
+## Links
+* Project Home, News: [www.sourcetrail.com](https://www.sourcetrail.com/) 
+* Documentation: [www.sourcetrail.com/documentation](https://www.sourcetrail.com/documentation/#VsCode) 
+* Download, Reviews: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=astallinger.sourcetrail)
+* Code, Issues: [GitHub](http://github.com/CoatiSoftware/vsce-sourcetrail.git)) 
 
 ## Features
 
