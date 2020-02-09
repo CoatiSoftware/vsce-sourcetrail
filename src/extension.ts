@@ -68,7 +68,6 @@ class Sourcetrail {
 
         if (this._server) {
             this.stopServer();
-            this._statusBarItem.hide();
         }
 
         this._server = net.createServer(function (socket) {
@@ -92,6 +91,7 @@ class Sourcetrail {
     public stopServer() {
         this._server.close();
         this._server = null;
+        this._statusBarItem.hide();
     }
 
     sendPing() {
