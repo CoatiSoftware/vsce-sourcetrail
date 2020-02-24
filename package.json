@@ -3,7 +3,7 @@
     "icon": "icon.png",
     "displayName": "sourcetrail",
     "description": "VSCode Extension to communicate with Sourcetrail",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "publisher": "coatisoftware",
     "engines": {
         "vscode": "^1.13.0"
@@ -20,7 +20,7 @@
     },
     "homepage": "https://github.com/CoatiSoftware/vsce-sourcetrail/blob/master/README.md",
     "bugs": {
-        "email": "astallinger@coati.io",
+        "email": "mlangkabel@coati.io",
         "url": "https://github.com/CoatiSoftware/vsce-sourcetrail/issues"
     },
     "license": "LICENSE.txt",

@@ -36,10 +36,3 @@ This extension contributes the following settings:
 * `sourcetrail.ip`: TCP server ip address
 * `sourcetrail.startServerAtStartup`: set to `true` to start the TCP listener at VS Code startup
 
-## Known Issues
-
-## Release Notes
-
-### 0.1.0
-
-Prototype
