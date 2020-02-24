@@ -7,7 +7,7 @@ This extension enables VS Code to communicate with [Sourcetrail](http://sourcetr
 * Project Home, News: [www.sourcetrail.com](https://www.sourcetrail.com/) 
 * Documentation: [www.sourcetrail.com/documentation](https://www.sourcetrail.com/documentation/#VsCode) 
 * Download, Reviews: [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=astallinger.sourcetrail)
-* Code, Issues: [GitHub](http://github.com/CoatiSoftware/vsce-sourcetrail.git)) 
+* Code, Issues: [GitHub](http://github.com/CoatiSoftware/vsce-sourcetrail.git) 
 
 ## Features
 
